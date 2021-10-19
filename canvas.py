@@ -1,12 +1,14 @@
 import cv2
 import uuid
 import numpy as np
+import hashlib
 from numpy.lib.function_base import blackman
 
 
 class Shape():
     def __init__(self, type):
-        self.uuid = uuid.uuid4()
+        # self.uuid = uuid.uuid4()
+        self.uuid = int(hashlib.sha1((str(uuid.uuid4())).encode("utf-8")).hexdigest(), 16) % (10 ** 4)
         self.angle = 0
         self.border = 3
         self.position = (200, 200)
@@ -139,9 +141,7 @@ class Canvas():
             pt4 = (100+shape.border, 0+shape.border)
             square_cnt = np.array( [pt1, pt2, pt3, pt4] )
 
-            draw_base_shape = cv2.drawContours(blank_image, [square_cnt], 0, (0,255,0,255), 3)
-
-            
+            draw_base_shape = cv2.drawContours(blank_image, [square_cnt], 0, (0,255,0,255), 3)            
 
             pass
         elif(shape.type == 'triangle'):
@@ -206,6 +206,7 @@ class Canvas():
         return shape
 
     def removeShape(self, uuid):
+        del self.shapes[int(uuid)]
         pass
 
     def shapeOptions(self, uuid):
@@ -263,6 +264,6 @@ class Canvas():
             
         canvas = cv2.rotate(canvas,cv2.ROTATE_180)
         cv2.imshow("Window", canvas)
-        key = cv2.waitKey(0)
+        key = cv2.waitKey(1)
         return key
         pass
