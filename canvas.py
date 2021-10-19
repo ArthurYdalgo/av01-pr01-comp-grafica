@@ -141,7 +141,7 @@ class Canvas():
             pt4 = (100+shape.border, 0+shape.border)
             square_cnt = np.array( [pt1, pt2, pt3, pt4] )
 
-            draw_base_shape = cv2.drawContours(blank_image, [square_cnt], 0, (0,255,0,255), 3)            
+            draw_base_shape = cv2.drawContours(blank_image, [square_cnt], 0, (0,255,0,255), 2)            
 
             pass
         elif(shape.type == 'triangle'):
@@ -151,7 +151,7 @@ class Canvas():
             pt3 = (50+shape.border,100+shape.border)
             triangle_cnt = np.array( [pt2, pt1, pt3] )
 
-            draw_base_shape = cv2.drawContours(blank_image, [triangle_cnt], 0, (0,255,0,255), 3)
+            draw_base_shape = cv2.drawContours(blank_image, [triangle_cnt], 0, (0,255,0,255), 2)
             
             pass
         elif(shape.type == 'hexagon'):
@@ -163,7 +163,7 @@ class Canvas():
             pt3 = (50+shape.border, 0+shape.border)
 
             hexagon_cnt = np.array([pt1,pt2,pt4,pt6,pt5,pt3])
-            draw_base_shape = cv2.drawContours(blank_image, [hexagon_cnt], 0, (0,255,0,255), 3)
+            draw_base_shape = cv2.drawContours(blank_image, [hexagon_cnt], 0, (0,255,0,255), 2)
             pass
         elif(shape.type == 'irregular'):
             polygon_cnt = np.array(shape.points)
