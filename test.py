@@ -17,7 +17,7 @@ main.after(300, draw)
 main.geometry("300x300")
 add_shape_dialog = tkinter.Frame()
 
-def addNewShape(type=None, center=None, thickness=None, scale=None, vertices = None):    
+def addNewShape():    
 
     shape = canvas.addShape('hexagon')
     Lb.insert(0,'{}, {}'.format(shape.uuid,shape.type))
