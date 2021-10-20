@@ -4,6 +4,7 @@ import numpy as np
 import hashlib
 from numpy.lib.function_base import blackman
 
+base_scale = 2
 
 class Shape():
     def __init__(self, type):
@@ -11,7 +12,7 @@ class Shape():
         self.uuid = int(hashlib.sha1((str(uuid.uuid4())).encode("utf-8")).hexdigest(), 16) % (10 ** 4)
         self.angle = 0
         self.border = 3
-        self.position = (200, 200)
+        self.position = (0, 0)
         self.scale = 1
         self.type = type
         self.points = []
@@ -30,6 +31,7 @@ class Shape():
         pass
 
     def translate(self, x_axis, y_axis):
+        self.position = (self.position[0] + x_axis, self.position[1] + y_axis)
         pass
 
     def scaleShape(self, scale):
@@ -66,7 +68,7 @@ class Shape():
         height, width = mat.shape[:2] # image shape has 3 dimensions
         image_center = (width/2, height/2) # getRotationMatrix2D needs coordinates in reverse order (width, height) compared to shape
 
-        rotation_mat = cv2.getRotationMatrix2D(image_center, angle, self.scale)
+        rotation_mat = cv2.getRotationMatrix2D(image_center, angle, 1)
 
         # rotation calculates the cos and sin, taking absolutes of those.
         abs_cos = abs(rotation_mat[0,0]) 
@@ -89,7 +91,7 @@ class Shape():
             height, width = self.image.shape[:2] # image shape has 3 dimensions
             image_center = (width/2, height/2) # getRotationMatrix2D needs coordinates in reverse order (width, height) compared to shape
 
-            rotation_mat = cv2.getRotationMatrix2D(image_center, self.angle, 1.)
+            rotation_mat = cv2.getRotationMatrix2D(image_center, self.angle, 1)
 
             # rotation calculates the cos and sin, taking absolutes of those.
             abs_cos = abs(rotation_mat[0,0]) 
@@ -132,13 +134,13 @@ class Canvas():
 
     def _renderShape(self, uuid):
         shape = self.shapes[uuid]
-        default_size = 100
-        blank_image = self.blankImage((default_size + int(shape.border * 2) ,default_size + int(shape.border * 2)))
+        
+        blank_image = self.blankImage((base_scale*shape.scale + shape.border* 2 ,base_scale*shape.scale + shape.border*2))
         if(shape.type == 'square'):
-            pt1 = (0+shape.border, 0+shape.border)
-            pt2 = (0+shape.border, 100+shape.border)
-            pt3 = (100+shape.border, 100+shape.border)
-            pt4 = (100+shape.border, 0+shape.border)
+            pt1 = (0+ shape.border, 0+ shape.border)
+            pt2 = (0+ shape.border, base_scale*shape.scale+ shape.border)
+            pt3 = (base_scale*shape.scale+ shape.border, base_scale*shape.scale+ shape.border)
+            pt4 = (base_scale*shape.scale+ shape.border, 0+ shape.border)
             square_cnt = np.array( [pt1, pt2, pt3, pt4] )
 
             draw_base_shape = cv2.drawContours(blank_image, [square_cnt], 0, (0,255,0,255), 2)            
@@ -146,21 +148,21 @@ class Canvas():
             pass
         elif(shape.type == 'triangle'):
            
-            pt1 = (0+shape.border, 0+shape.border)
-            pt2 = (100+shape.border, 0+shape.border)
-            pt3 = (50+shape.border,100+shape.border)
+            pt1 = (0+ shape.border, 0+ shape.border)
+            pt2 = (int(base_scale * shape.scale + shape.border), 0+ shape.border)
+            pt3 = (int(((base_scale * shape.scale) / 2)+ shape.border),int(base_scale * shape.scale+ shape.border))
             triangle_cnt = np.array( [pt2, pt1, pt3] )
 
             draw_base_shape = cv2.drawContours(blank_image, [triangle_cnt], 0, (0,255,0,255), 2)
             
             pass
         elif(shape.type == 'hexagon'):
-            pt1 = (0+shape.border, 25+shape.border)
-            pt2 = (0+shape.border, 75+shape.border)
-            pt4 = (50+shape.border, 100+shape.border)
-            pt6 = (100+shape.border,75+shape.border)
-            pt5 = (100+shape.border, 25+shape.border)
-            pt3 = (50+shape.border, 0+shape.border)
+            pt1 = (0+shape.border,int(0.25*base_scale * shape.scale + shape.border))
+            pt2 = (0+shape.border, int(0.75*base_scale * shape.scale + shape.border))
+            pt4 = (int(0.5*base_scale * shape.scale + shape.border), int(base_scale * shape.scale + shape.border))
+            pt6 = (int(base_scale * shape.scale + shape.border),int(0.75*base_scale * shape.scale + shape.border))
+            pt5 = (int(base_scale * shape.scale + shape.border),int(0.25*base_scale * shape.scale + shape.border))
+            pt3 = (int(0.5*base_scale * shape.scale + shape.border), 0+shape.border)
 
             hexagon_cnt = np.array([pt1,pt2,pt4,pt6,pt5,pt3])
             draw_base_shape = cv2.drawContours(blank_image, [hexagon_cnt], 0, (0,255,0,255), 2)
@@ -171,6 +173,7 @@ class Canvas():
             pass
 
         shape.image = draw_base_shape
+        
         # shape.rotateRender()
         shape.rotate_image(shape.image,shape.angle)
 
@@ -220,13 +223,20 @@ class Canvas():
         if(uuid in self.shapes and ratio and ratio > 0):
             shape = self.shapes[uuid]
             shape.scaleShape(ratio)
+    def translateShape(self, uuid, x_delta, y_delta):
+        if(uuid in self.shapes and  0 < x_delta < self.width and 0 < y_delta < self.height):
+            shape = self.shapes[uuid]
+            shape.translate(x_delta, y_delta)
 
     def drawShapeOnCanvas(self,shape_uuid,background):
         #get position and crop pasting area if needed
         shape = self.shapes[shape_uuid]
         foreground = shape.image
+
         x = shape.position[0] - int(shape.image.shape[0]/2)
         y = shape.position[1] - int(shape.image.shape[1]/2)
+        x = int((self.width / 2) + shape.position[0] - (shape.scale*base_scale)/2)
+        y = int((self.height / 2) + shape.position[1] - (shape.scale*base_scale)/2)
         bgWidth = background.shape[0]
         bgHeight = background.shape[1]
         frWidth = foreground.shape[0]
@@ -262,7 +272,8 @@ class Canvas():
             self._renderShape(shape_uuid)
             canvas = self.drawShapeOnCanvas(shape_uuid, canvas)
             
-        canvas = cv2.rotate(canvas,cv2.ROTATE_180)
+        
+        canvas = cv2.flip(canvas,0)
         cv2.imshow("Window", canvas)
         key = cv2.waitKey(1)
         return key

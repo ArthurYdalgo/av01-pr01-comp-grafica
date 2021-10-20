@@ -2,12 +2,15 @@ from cv2 import SimpleBlobDetector
 from canvas import Canvas
 import tkinter
 
-canvas = Canvas(400,400)
+canvas = Canvas(800,800)
 new_shape_window = None
 new_shape_options_window = None
 shape_select=None
 selected_shape = None
 main = tkinter.Tk()
+x = None
+y = None
+size = None
 options = ['Triangulo','Hexagono','Quadrado','Poligono irregular']
 
 def draw():
@@ -17,10 +20,15 @@ main.after(300, draw)
 main.geometry("300x300")
 add_shape_dialog = tkinter.Frame()
 
-def addNewShape():    
+def addNewShape(x,y,size):    
+    types = {'Triangulo':'triangle','Hexagono':'hexagon','Quadrado':'square','Poligono irregular':'irregular'}
+    global selected_shape
+    if(selected_shape in types):
 
-    shape = canvas.addShape('hexagon')
-    Lb.insert(0,'{}, {}'.format(shape.uuid,shape.type))
+        shape = canvas.addShape(types[selected_shape])
+        canvas.translateShape(shape.uuid,x,y)
+        canvas.scaleShape(shape.uuid,size)
+        Lb.insert(0,'{}, {}'.format(shape.uuid,shape.type))
  
 def confirmShapeSelection():
     global selected_shape
@@ -38,6 +46,14 @@ def cancelShapeSelection():
     new_shape_window.destroy()
 
 def confirmShapeOptionsSelection():
+    x_value = int(x.get())
+    y_value = int(y.get())
+    size_value = int(size.get())
+    addNewShape(x_value,y_value,size_value)
+    global selected_shape
+    selected_shape = None
+    global new_shape_options_window
+    new_shape_options_window.destroy()    
 
     pass
 
@@ -49,7 +65,7 @@ def cancelShapeOptionsSelection():
     pass
 
 def validateNumberEntry(value):    
-    if value == '':
+    if value == '' or value == '-':
         return True
     if value:
         try:
@@ -75,10 +91,10 @@ def newShapeOptions():
          text="X: ").grid(row=0)
     tkinter.Label(new_shape_options_window, 
             text="Y: ").grid(row=1)
-
-    x = tkinter.Entry(new_shape_options_window, validate = 'key', validatecommand=reg)
+    global x,y,size
+    x = tkinter.Entry(new_shape_options_window,  validate = 'key', validatecommand=reg)
     y = tkinter.Entry(new_shape_options_window, validate = 'key', validatecommand=reg)
-
+    
     x.grid(row=0, column=1)
     y.grid(row=1, column=1)
 
